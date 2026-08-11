@@ -1,4 +1,6 @@
-# Delivery API
+# 🛵 Delivery API
+
+> A production-shaped REST API for a food delivery platform — demonstrating three real-world backend patterns: JWT auth with hashed refresh-token rotation, Stripe-integrated payments, and real-time order tracking over Socket.io — in one cohesive Express + TypeScript codebase.
 
 ![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
@@ -11,24 +13,24 @@
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![Swagger](https://img.shields.io/badge/Swagger-docs-85EA2D?logo=swagger&logoColor=black)
 
-A production-shaped REST API for a food delivery platform — customers order from restaurants, restaurants manage their menus, drivers pick up and deliver orders, and everyone gets live status updates over WebSockets. Built with Node.js, TypeScript, and Express, backed by PostgreSQL via Prisma.
+![Swagger UI](swagger.png)
 
-## Features
+---
 
-- **Auth** — JWT access/refresh tokens (refresh tokens stored hashed, never in plaintext), bcrypt password hashing, email verification via a hashed, expiring token sent by email.
-- **Role-based access control** — `CUSTOMER`, `DRIVER`, `ADMIN`, enforced per-route.
-- **Restaurants & menus** — CRUD with ownership checks, pagination, search and filtering.
-- **Orders** — server-computed totals from live menu prices, an explicit status state machine (`PENDING → CONFIRMED → PREPARING → PICKED_UP → DELIVERED`, or `CANCELLED`).
-- **Payments** — Stripe PaymentIntents with a signature-verified webhook.
-- **Live delivery tracking** — Socket.io, JWT-authenticated handshake, per-order rooms, driver-ownership-checked location updates.
-- **Background jobs** — BullMQ/Redis queues for transactional email and order-status notifications.
-- **Validation & docs** — Zod schemas on every route, OpenAPI/Swagger generated from JSDoc and served at `/api/docs`.
+## ✨ Features
 
-## What I built
+- 🔐 **Auth** — JWT access/refresh tokens, refresh tokens stored SHA-256 hashed (never plaintext), email verification via a hashed, expiring token sent by email
+- 🛡️ **Role-based access control** — `CUSTOMER`, `DRIVER`, `ADMIN`, enforced per-route
+- 🍽️ **Restaurants & menus** — CRUD with ownership checks, pagination, search and filtering
+- 📦 **Orders** — server-computed totals from live menu prices, an explicit status state machine (`PENDING → CONFIRMED → PREPARING → PICKED_UP → DELIVERED`, or `CANCELLED`)
+- 💳 **Payments** — Stripe PaymentIntents with a signature-verified webhook
+- 🛵 **Live delivery tracking** — Socket.io, JWT-authenticated handshake, per-order rooms, driver-ownership-checked location updates
+- ⚙️ **Background jobs** — BullMQ/Redis queues for transactional email and order-status notifications
+- 📖 **Validation & docs** — Zod schemas on every route, OpenAPI/Swagger generated from JSDoc and served at `/api/docs`
 
-A real-world food delivery platform where customers discover restaurants, place orders with server-computed totals, pay via Stripe, and track their driver live on a map. Restaurant owners manage their menus and confirm orders. Drivers pick up orders and stream location updates over WebSockets. Everyone receives real-time status notifications via background job queues.
+---
 
-## Tech stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -42,28 +44,37 @@ A real-world food delivery platform where customers discover restaurants, place 
 | API docs | Swagger (OpenAPI 3) |
 | Auth | JWT (jsonwebtoken), bcryptjs |
 | Testing | Jest, ts-jest |
-| Containerization | Docker, docker-compose |
+| DevOps | Docker, docker-compose |
 
-## Architecture overview
+---
 
-Requests flow through a consistent layered pipeline:
+## 🏗️ Architecture
 
 ```
-routes/  → validate (Zod) → authenticate/authorize → controllers/ → services/ → prisma → PostgreSQL
+┌────────────────────┐        HTTPS / WS               ┌───────────────────────────────┐
+│  Client (web/mobile) │ ───────────────────────────────▶│   Express API (Node 20 + TS)   │
+│                      │◀─────────────────────────────── │                                 │
+└────────────────────┘      JSON / Socket.io events      │  routes/ → validate (Zod) →     │
+                                                            │  authenticate/authorize →       │
+                                                            │  controllers/ → services/       │
+                                                            │                                 │
+                                                            │  services/ ─────────────────────┼──▶ PostgreSQL (Prisma)
+                                                            │   ├─ auth.service.ts             │
+                                                            │   ├─ order.service.ts            │
+                                                            │   ├─ payment.service.ts ─────────┼──▶ Stripe
+                                                            │   └─ delivery.service.ts         │
+                                                            │                                 │
+                                                            │  jobs/ (BullMQ workers) ─────────┼──▶ Redis
+                                                            │                                 │
+                                                            │  sockets/ (Socket.io) ───────────┼──▶ live order/delivery rooms
+                                                            └───────────────────────────────┘
 ```
 
-- **`routes/`** — one file per resource, wires middleware and carries the Swagger JSDoc for each endpoint.
-- **`middlewares/`** — `auth` (JWT verification), `rbac` (role checks), `validate` (Zod), centralized `error` handler, tiered rate limiting.
-- **`controllers/`** — thin HTTP adapters: parse the request, call a service, shape the response. No business logic.
-- **`services/`** — business logic and Prisma queries live here, framework-agnostic.
-- **`validators/`** — Zod schemas, also the source of inferred DTO types used throughout.
-- **`jobs/`** — BullMQ queues and workers for async work (email, order-status fan-out) so request handlers stay fast.
-- **`sockets/`** — Socket.io handlers; delivery-location updates delegate into the same service the REST endpoint uses, so authorization logic isn't duplicated.
-- **`config/`** — one file per external dependency (database, redis, stripe, swagger), each exporting a ready-to-use client built from the validated environment.
+`routes/` → `middlewares/` (auth, rbac, validate, error) → `controllers/` (thin HTTP adapters) → `services/` (business logic + Prisma queries) → `config/` (one client per external dependency). Environment variables are validated once at boot with a Zod schema (`src/config/env.ts`) — the process refuses to start if a required variable is missing or malformed.
 
-Environment variables are validated once at boot with a Zod schema (`src/config/env.ts`) — the process refuses to start if a required variable is missing or malformed.
+---
 
-## Getting started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -72,7 +83,7 @@ Environment variables are validated once at boot with a Zod schema (`src/config/
 ### Run with Docker (recommended)
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/petryk-dev/delivery-api.git
 cd delivery-api
 cp .env.example .env
 # edit .env — at minimum set JWT_ACCESS_SECRET / JWT_REFRESH_SECRET (openssl rand -hex 64),
@@ -91,7 +102,7 @@ The API is now running at `http://localhost:3002`, with docs at `http://localhos
 npm install
 cp .env.example .env   # point DATABASE_URL / REDIS_HOST at your local instances
 npx prisma migrate dev
-npm run dev
+npm run dev             # http://localhost:3002
 ```
 
 ### Useful scripts
@@ -108,42 +119,36 @@ npm run dev
 | `npm run prisma:seed` | Seed sample users, a restaurant, and menu items |
 | `npm run prisma:studio` | Open Prisma Studio |
 
-## API documentation
+---
 
-Interactive Swagger UI is served at **[`/api/docs`](http://localhost:3002/api/docs)** once the server is running, generated from JSDoc annotations on every route.
-
-![Swagger UI](swagger.png)
-*(Run the server and visit /api/docs to see the interactive documentation)*
-
-## Environment variables
+## 🔑 Environment Variables
 
 All variables are validated at boot (`src/config/env.ts`); the process exits immediately if one is missing or malformed. See [`.env.example`](.env.example) for a ready-to-copy template — it ships with placeholders only, never real credentials.
 
-| Variable | Description | Default |
-|---|---|---|
-| `NODE_ENV` | `development` \| `production` \| `test` | `development` |
-| `PORT` | HTTP port | `3002` |
-| `API_PREFIX` | Base path for all API routes | `/api` |
-| `DATABASE_URL` | PostgreSQL connection string | — required |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password | — optional |
-| `JWT_ACCESS_SECRET` | Secret for signing access tokens (min 32 chars) | — required |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens (min 32 chars) | — required |
-| `JWT_ACCESS_EXPIRES_IN` | Access token TTL | `15m` |
-| `JWT_REFRESH_EXPIRES_IN` | Refresh token TTL | `7d` |
-| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_...`) | — required |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) | — required |
-| `GOOGLE_MAPS_API_KEY` | Google Maps API key (geocoding/ETA — currently stubbed) | — required |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Outbound email (Nodemailer) | `SMTP_PORT` defaults to `587` |
-| `EMAIL_FROM` | From-address for outbound email | — required |
-| `CORS_ORIGIN` | Allowed origin for browser clients | `*` |
-| `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | Global rate limit window and cap | `900000` / `100` |
-| `AUTH_RATE_LIMIT_MAX` | Cap for `/auth/*` endpoints in the same window | `10` |
-| `LOG_LEVEL` | Winston log level | `debug` |
-| `LOG_DIR` | Directory for log files | `logs` |
+| Variable | Required | Description |
+|---|:---:|---|
+| `NODE_ENV` | – | `development` \| `production` \| `test`, defaults to `development` |
+| `PORT` | – | HTTP port, defaults to `3002` |
+| `API_PREFIX` | – | Base path for all API routes, defaults to `/api` |
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `REDIS_HOST` / `REDIS_PORT` | – | Default to `localhost` / `6379` |
+| `REDIS_PASSWORD` | – | Optional |
+| `JWT_ACCESS_SECRET` | ✅ | Signs access tokens (min 32 chars) |
+| `JWT_REFRESH_SECRET` | ✅ | Signs refresh tokens (min 32 chars) |
+| `JWT_ACCESS_EXPIRES_IN` / `JWT_REFRESH_EXPIRES_IN` | – | Default to `15m` / `7d` |
+| `STRIPE_SECRET_KEY` | ✅ | Stripe secret key (`sk_...`) |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signing secret (`whsec_...`) |
+| `GOOGLE_MAPS_API_KEY` | ✅ | Geocoding/ETA — currently stubbed |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | ✅ | Outbound email (Nodemailer); `SMTP_PORT` defaults to `587` |
+| `EMAIL_FROM` | ✅ | From-address for outbound email |
+| `CORS_ORIGIN` | – | Allowed origin for browser clients, defaults to `*` |
+| `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | – | Global rate limit window and cap, default `900000` / `100` |
+| `AUTH_RATE_LIMIT_MAX` | – | Cap for `/auth/*` endpoints in the same window, defaults to `10` |
+| `LOG_LEVEL` / `LOG_DIR` | – | Default to `debug` / `logs` |
 
-## Testing
+---
+
+## 🧪 Testing
 
 ```bash
 npm test
@@ -151,10 +156,43 @@ npm test
 
 Tests are unit-level and mock the Prisma client and job queues, so they run without a live database or Redis instance. Coverage focuses on the auth flow (registration, login, refresh-token rotation, email verification) and the order lifecycle (total computation, status transitions).
 
-## License
+---
 
-MIT
+## 📦 Deployment
 
-## Author
+The app ships as a multi-stage [`Dockerfile`](Dockerfile) — `npm ci`, `prisma generate`, `tsc` build in one stage, production-only deps and a regenerated Prisma client in the final stage, running as a non-root user with a built-in healthcheck. It deploys anywhere that runs containers (Railway, Fly.io, Render, ECS, a VPS):
 
-**Volodymyr Petryk** — [linkedin.com/in/volodymyr-petryk](https://linkedin.com/in/volodymyr-petryk)
+1. Provision managed PostgreSQL and Redis instances.
+2. Set the environment variables from the table above on the host.
+3. Build and run the image (`docker build -t delivery-api .`), or use [`docker-compose.yml`](docker-compose.yml) as a reference for wiring the app to its dependencies.
+4. Run `npx prisma migrate deploy` against the production database before traffic hits the new instance.
+
+---
+
+## ⚙️ How It Works
+
+**Auth** — Registration hashes the password with bcrypt and issues a JWT access/refresh pair; the refresh token is stored as a SHA-256 hash, never in plaintext, so a database read alone can't yield a usable session. A separate, hashed, 24-hour-expiring token is emailed for verification — `/auth/verify-email` checks it against the stored hash, matching real email-ownership proof rather than trusting a logged-in session. A refresh-token mismatch (stale or replayed) revokes the stored session outright instead of just failing the one request.
+
+**Orders & payments** — Order totals are computed server-side from live menu prices, never trusted from the client. Status changes move through an explicit state machine (`PENDING → CONFIRMED → PREPARING → PICKED_UP → DELIVERED`, or `CANCELLED` from an early state), with role checks on top — customers can only cancel. Payment goes through a Stripe PaymentIntent tied to the order; the webhook handler verifies Stripe's signature before ever touching the database.
+
+**Real-time delivery tracking** — Socket.io connections authenticate with the same JWT used for REST calls. When a driver streams a location update over the socket, the handler delegates into the identical `delivery.service` function the REST `PATCH /delivery/:orderId/location` endpoint uses — so the ownership check (this driver must own this delivery) lives in exactly one place instead of being duplicated, and possibly drifting, between the two transports.
+
+---
+
+## 📚 What I Learned
+
+- Rotating and hashing refresh tokens correctly, including revoking a session on a reuse/mismatch instead of only rejecting the one request
+- Building a real email-verification flow (hashed, expiring, out-of-band token) instead of trusting an authenticated session
+- Keeping authorization logic in one place when the same action is reachable over both REST and Socket.io
+- Structuring background work (transactional email, order-status fan-out) through BullMQ so request handlers stay fast
+- Writing a Prisma migration and generating the client without a live database connection, for CI environments that don't have one
+- Unit-testing service-layer logic by mocking the Prisma client and job queues, so the suite runs without a live database or Redis
+- Building a production Docker image: multi-stage build, non-root user, healthcheck, and a Prisma client regenerated against the runtime image's engine target
+
+---
+
+## 👤 Author
+
+**Volodymyr Petryk**
+
+[LinkedIn](https://linkedin.com/in/volodymyr-petryk) · [petryk.developer@gmail.com](mailto:petryk.developer@gmail.com)

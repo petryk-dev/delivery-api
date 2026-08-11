@@ -1,5 +1,16 @@
 # Delivery API
 
+![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-payments-635BFF?logo=stripe&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-realtime-010101?logo=socket.io&logoColor=white)
+![Jest](https://img.shields.io/badge/Tests-19_passing-brightgreen?logo=jest&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-docs-85EA2D?logo=swagger&logoColor=black)
+
 A production-shaped REST API for a food delivery platform — customers order from restaurants, restaurants manage their menus, drivers pick up and deliver orders, and everyone gets live status updates over WebSockets. Built with Node.js, TypeScript, and Express, backed by PostgreSQL via Prisma.
 
 ## Features
@@ -12,6 +23,10 @@ A production-shaped REST API for a food delivery platform — customers order fr
 - **Live delivery tracking** — Socket.io, JWT-authenticated handshake, per-order rooms, driver-ownership-checked location updates.
 - **Background jobs** — BullMQ/Redis queues for transactional email and order-status notifications.
 - **Validation & docs** — Zod schemas on every route, OpenAPI/Swagger generated from JSDoc and served at `/api/docs`.
+
+## What I built
+
+A real-world food delivery platform where customers discover restaurants, place orders with server-computed totals, pay via Stripe, and track their driver live on a map. Restaurant owners manage their menus and confirm orders. Drivers pick up orders and stream location updates over WebSockets. Everyone receives real-time status notifications via background job queues.
 
 ## Tech stack
 
@@ -96,6 +111,9 @@ npm run dev
 ## API documentation
 
 Interactive Swagger UI is served at **[`/api/docs`](http://localhost:3002/api/docs)** once the server is running, generated from JSDoc annotations on every route.
+
+![Swagger UI](swagger.png)
+*(Run the server and visit /api/docs to see the interactive documentation)*
 
 ## Environment variables
 
